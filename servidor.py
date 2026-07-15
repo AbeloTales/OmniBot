@@ -1,54 +1,57 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO
 import spidev
-import time
+import logging
 
-# Configuración del servidor Web y WebSockets
+# Configuración inicial de Flask y SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Configuración de comunicación por bus SPI hacia el microcontrolador
+# --- Configuración SPI ---
 spi = spidev.SpiDev()
 try:
-    # Abrimos bus 0, dispositivo 0 (pines estándar físicos SPI en la Raspberry Pi)
-    spi.open(0, 0)
-    spi.mode = 0b00  # Modo 0: Clock polaridad 0, fase 0 (El más común)
-    spi.max_speed_hz = 1000000  # Velocidad: 1 MHz
-    spi_habilitado = True
-    print(" [OK] Hardware SPI inicializado y listo para transmitir.")
+    spi.open(0, 0) # Puerto 0, Chip Select 0
+    spi.mode = 0b00
+    spi.max_speed_hz = 100000 # 100kHz para máxima estabilidad
+    print("SPI configurado correctamente.")
 except Exception as e:
-    print(f" [ADVERTENCIA] No se pudo abrir el bus SPI. ¿Está activado en dietpi-config? Detalle: {e}")
-    spi_habilitado = False
+    print(f"Error al abrir SPI: {e}")
 
+def enviar_spi(x, y):
+    """
+    Envía una trama de 3 bytes [255, X, Y] al ESP32.
+    """
+    # Mapeo: aseguramos que los valores estén entre 0 y 254
+    # (Reservamos 255 como byte de inicio para sincronización)
+    val_x = max(0, min(254, int(x)))
+    val_y = max(0, min(254, int(y)))
+    
+    try:
+        spi.xfer2([255, val_x, val_y])
+    except Exception as e:
+        print(f"Error enviando SPI: {e}")
+
+# --- Rutas de Flask ---
 @app.route('/')
 def index():
-    # Renderiza y envía la interfaz universal HTML al navegador de tu laptop
     return render_template('index.html')
 
-@socketio.on('comando_movimiento')
-def procesar_movimiento(datos):
-    vx = datos.get('x', 0)
-    vy = datos.get('y', 0)
+# --- Manejo de eventos de SocketIO (Teleoperación) ---
+@socketio.on('connect')
+def test_connect():
+    print("Cliente conectado")
+
+@socketio.on('mensaje_tecla') # Ajusta este nombre al que uses en tu JS
+def handle_tecla(data):
+    # 'data' debería traer algo como {'x': 127, 'y': 127}
+    x = data.get('x', 127)
+    y = data.get('y', 127)
     
-    # Consola de depuración (visible en la terminal si estás conectado por SSH)
-    print(f" -> Vector recibido | X: {vx} | Y: {vy}")
+    print(f"Comando recibido: X={x}, Y={y}")
     
-    if spi_habilitado:
-        # Conversión del rango vectorial [-1 a 1] a bytes sin signo [0 a 255]
-        # Reposo / Freno = 127
-        byte_x = int((vx + 1) * 127.5)
-        byte_y = int((vy + 1) * 127.5)
-        
-        # Trama de datos: [Byte de inicio (255), Eje X, Eje Y]
-        trama = [255, byte_x, byte_y]
-        
-        # Enviar ráfaga al microcontrolador
-        spi.xfer2(trama)
+    # Enviar al ESP32 vía SPI
+    enviar_spi(x, y)
 
 if __name__ == '__main__':
-    print(" ========================================================")
-    print("  Iniciando servidor de OmniBot en el puerto 5000...")
-    print("  Accede desde el navegador de tu laptop en: http://192.168.100.66:5000")
-    print(" ========================================================")
-    # Se ejecuta en todas las interfaces de red de la Raspberry (0.0.0.0)
-    socketio.run(app, host='0.0.0.0', port=5000)
+    print("Iniciando servidor de OmniBot...")
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
