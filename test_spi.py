@@ -4,7 +4,7 @@ import time
 # Configuración SPI
 spi = spidev.SpiDev()
 spi.open(0, 1)
-spi.mode = 0b11
+spi.mode = 0b01
 spi.max_speed_hz = 10000
 
 print("Enviando señales de prueba al SPI...")
