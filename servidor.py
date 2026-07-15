@@ -10,7 +10,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # --- Configuración SPI ---
 spi = spidev.SpiDev()
 try:
-    spi.open(0, 0) # Puerto 0, Chip Select 0
+    spi.open(0, 1) # Puerto 0, Chip Select 0
     spi.mode = 0b00
     spi.max_speed_hz = 100000 # 100kHz para máxima estabilidad
     print("SPI configurado correctamente.")
