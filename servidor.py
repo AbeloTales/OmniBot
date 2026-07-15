@@ -12,6 +12,7 @@ spi = spidev.SpiDev()
 try:
     # Abrimos bus 0, dispositivo 0 (pines estándar físicos SPI en la Raspberry Pi)
     spi.open(0, 0)
+    spi.mode = 0b00  # Modo 0: Clock polaridad 0, fase 0 (El más común)
     spi.max_speed_hz = 1000000  # Velocidad: 1 MHz
     spi_habilitado = True
     print(" [OK] Hardware SPI inicializado y listo para transmitir.")
