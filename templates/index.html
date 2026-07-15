@@ -2,110 +2,51 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>OmniBot - Panel de Teleoperación</title>
-    <!-- Librería Socket.IO para comunicación en tiempo real -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniBot - Panel de Control</title>
+    <!-- Cargamos la librería para comunicarse con Flask -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
     <style>
-        body {
-            background-color: #000000;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: #aaaaaa;
-            margin-bottom: 5px;
-        }
-        .subtitle {
-            color: #666666;
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-        #video-container {
-            margin: 10px auto;
-            border: 2px solid #333333;
-            display: inline-block;
-            background-color: #111111;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .status-box {
-            background-color: #1a1a1a;
-            border: 1px solid #333333;
-            padding: 15px;
-            margin: 15px auto;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 8px;
-        }
-        #ws-status {
-            font-weight: bold;
-            color: #ff4444; /* Rojo por defecto: Desconectado */
-        }
-        .data-value {
-            font-family: monospace;
-            font-size: 1.2em;
-            color: #00ffcc;
-        }
+        body { background-color: #121212; color: white; text-align: center; font-family: sans-serif; }
+        #video-feed { margin: 20px auto; border: 2px solid #333; }
+        .status { margin: 20px; padding: 15px; background: #1e1e1e; border-radius: 8px; display: inline-block; }
     </style>
 </head>
 <body>
     <h1>OmniBot</h1>
-    <p class="subtitle">Teleoperación de Plataforma Omnidireccional</p>
     
-    <div id="video-container">
-        <!-- El origen (src) se asignará automáticamente mediante JavaScript -->
-        <img id="video-stream" width="640" height="480" alt="Esperando flujo de video (Cámara USB)...">
+    <!-- Aquí se muestra el video de ustreamer -->
+    <div id="video-feed">
+        <img src="http://192.168.100.66:8080/stream" width="640" height="480" alt="Video">
     </div>
 
-    <div class="status-box">
-        <p>Estado del Enlace: <span id="ws-status">Desconectado</span></p>
-        <p>Vector X (Horizontal): <span class="data-value" id="val-x">0</span> | Vector Y (Vertical): <span class="data-value" id="val-y">0</span></p>
+    <div class="status">
+        <strong>Control:</strong> Usa W, A, S, D<br>
+        Vector X: <span id="val-x">127</span> | Vector Y: <span id="val-y">127</span>
     </div>
 
     <script>
-        // 1. AUTODETECCIÓN DE IP PARA EL VIDEO (Puerto 8080)
-        // Toma el hostname/IP actual de la web para conectarse al ustreamer de forma transparente
-        const ipActual = window.location.hostname;
-        document.getElementById('video-stream').src = `http://${ipActual}:8080/stream`;
+        const socket = io(); // Conecta con el servidor Python
 
-        // 2. INICIALIZACIÓN DE WEBSOCKETS (Puerto 5000)
-        const socket = io();
-        
-        socket.on('connect', () => {
-            document.getElementById('ws-status').innerText = 'Conectado (Enlace Activo)';
-            document.getElementById('ws-status').style.color = '#00ff00';
-        });
+        document.addEventListener('keydown', function(event) {
+            let x = 127; // Valor neutro
+            let y = 127; // Valor neutro
 
-        socket.on('disconnect', () => {
-            document.getElementById('ws-status').innerText = 'Desconectado';
-            document.getElementById('ws-status').style.color = '#ff4444';
-        });
+            // Mapeo de teclas
+            if (event.key === 'w' || event.key === 'W') y = 255;
+            if (event.key === 's' || event.key === 'S') y = 0;
+            if (event.key === 'a' || event.key === 'A') x = 0;
+            if (event.key === 'd' || event.key === 'D') x = 255;
 
-        // 3. CAPTURA DEL TECLADO (WASD) PARA VECTORES OMNIDIRECCIONALES
-        document.addEventListener('keydown', (event) => {
-            let vx = 0;
-            let vy = 0;
-            
-            if (event.key === 'w' || event.key === 'W') vy = 1;
-            if (event.key === 's' || event.key === 'S') vy = -1;
-            if (event.key === 'a' || event.key === 'A') vx = -1;
-            if (event.key === 'd' || event.key === 'D') vx = 1;
-            
-            if (vx !== 0 || vy !== 0) {
-                document.getElementById('val-x').innerText = vx;
-                document.getElementById('val-y').innerText = vy;
-                socket.emit('comando_movimiento', {x: vx, y: vy});
+            // Enviamos el mensaje al servidor solo si hay cambio
+            if (x !== 127 || y !== 127) {
+                socket.emit('mensaje_tecla', { x: x, y: y });
+                
+                // Actualizamos los números en pantalla para ver que funciona
+                document.getElementById('val-x').innerText = x;
+                document.getElementById('val-y').innerText = y;
             }
-        });
-
-        // Detener motores automáticamente al soltar la tecla
-        document.addEventListener('keyup', () => {
-            document.getElementById('val-x').innerText = 0;
-            document.getElementById('val-y').innerText = 0;
-            socket.emit('comando_movimiento', {x: 0, y: 0});
         });
     </script>
 </body>
