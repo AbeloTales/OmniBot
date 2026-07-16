@@ -20,15 +20,8 @@ import time
 import threading
 import queue
 
-import RPi.GPIO as GPIO
 from flask import Flask, render_template
 from flask_socketio import SocketIO
-
-# --- Configuracion de pines ---------------------------------------------
-HANDSHAKE_PIN = 17  # GPIO de la Pi conectado al GPIO4 (handshake) del ESP32
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(HANDSHAKE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 # --- Configuracion SPI ---------------------------------------------------
 spi = spidev.SpiDev()
@@ -46,39 +39,39 @@ def calc_checksum(a: int, b: int, c: int) -> int:
     return (a ^ b ^ c) & 0xFF
 
 
-def esperar_handshake(timeout: float = 0.05) -> bool:
-    """Bloquea hasta que el ESP32 indique que ya armo la transaccion SPI,
-    o hasta agotar el timeout (en segundos)."""
-    t0 = time.time()
-    while GPIO.input(HANDSHAKE_PIN) == 0:
-        if time.time() - t0 > timeout:
-            return False
-        time.sleep(0.0005)
-    return True
-
-
 def spi_worker():
     """Unico hilo que efectivamente toca el bus SPI. Evita condiciones de
-    carrera entre transacciones y hace innecesario el Lock manual."""
+    carrera entre transacciones y hace innecesario el Lock manual.
+
+    NOTA: se saco la espera de handshake por hardware. La evidencia de las
+    pruebas mostro que el bus responde bien con envio directo (igual que
+    test_spi.py), y que esperar el handshake estaba corrompiendo los datos
+    en vez de protegerlos. Se deja un pequeno intervalo minimo entre envios
+    para no saturar al ESP32 mientras procesa la trama anterior.
+    """
+    ultimo_envio = 0.0
+    intervalo_minimo = 0.02  # 20 ms entre tramas, ajustable segun pruebas
+
     while True:
         x, y = cmd_queue.get()
+
+        espera = intervalo_minimo - (time.time() - ultimo_envio)
+        if espera > 0:
+            time.sleep(espera)
 
         val_x = max(0, min(254, int(x)))
         val_y = max(0, min(254, int(y)))
         chk = calc_checksum(255, val_x, val_y)
-        packet = [255, val_x, val_y, chk]
-
-        if not esperar_handshake():
-            print("[SPI] Timeout esperando handshake del ESP32, se descarta la trama")
-            continue
+        packet = list([255, val_x, val_y, chk])  # copia nueva: xfer2 la muta
 
         try:
             resp = spi.xfer2(packet)
             # resp trae el eco tx_buf del ESP32: [0xAA, X_echo, Y_echo, chk]
-            # se puede validar aca si se quiere confirmar que el ESP32
-            # efectivamente aplico el comando anterior.
+            print(f"[SPI] Enviado x={val_x} y={val_y}  Respuesta ESP32: {resp}")
         except Exception as e:
             print(f"[SPI] Error en xfer2: {e}")
+
+        ultimo_envio = time.time()
 
 
 threading.Thread(target=spi_worker, daemon=True).start()
@@ -108,5 +101,4 @@ if __name__ == '__main__':
     try:
         socketio.run(app, host='0.0.0.0', port=5000)
     finally:
-        GPIO.cleanup()
         spi.close()
