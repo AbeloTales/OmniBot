@@ -4,50 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBot - Panel de Control</title>
-    <!-- Cargamos la librería para comunicarse con Flask -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    
+    <!-- Version mas reciente del cliente 4.x, mejor compatibilidad con
+         flask-socketio actual que la 4.0.1 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+
     <style>
         body { background-color: #121212; color: white; text-align: center; font-family: sans-serif; }
         #video-feed { margin: 20px auto; border: 2px solid #333; }
         .status { margin: 20px; padding: 15px; background: #1e1e1e; border-radius: 8px; display: inline-block; }
+        .debug { margin: 10px; padding: 10px; background: #1a1a1a; border-radius: 6px;
+                 display: inline-block; font-family: monospace; font-size: 13px; text-align: left; }
+        .ok { color: #4caf50; }
+        .bad { color: #f44336; }
     </style>
 </head>
-<body>
+<body tabindex="0">
     <h1>OmniBot</h1>
-    
-    <!-- Aquí se muestra el video de ustreamer -->
+
     <div id="video-feed">
         <img src="http://192.168.100.66:8080/stream" width="640" height="480" alt="Video">
     </div>
 
     <div class="status">
-        <strong>Control:</strong> Usa W, A, S, D<br>
+        <strong>Control:</strong> Usa W, A, S, D o un joystick USB<br>
         Vector X: <span id="val-x">127</span> | Vector Y: <span id="val-y">127</span>
     </div>
 
+    <div class="debug">
+        Socket: <span id="socket-status" class="bad">desconectado</span><br>
+        Gamepad: <span id="gamepad-status" class="bad">no detectado</span><br>
+        Ultimo envio: <span id="last-sent">-</span>
+    </div>
+
     <script>
-        const socket = io(); // Conecta con el servidor Python
+        const socket = io();
 
-        document.addEventListener('keydown', function(event) {
-            let x = 127; // Valor neutro
-            let y = 127; // Valor neutro
+        const elX = document.getElementById('val-x');
+        const elY = document.getElementById('val-y');
+        const elSocketStatus = document.getElementById('socket-status');
+        const elGamepadStatus = document.getElementById('gamepad-status');
+        const elLastSent = document.getElementById('last-sent');
 
-            // Mapeo de teclas
-            if (event.key === 'w' || event.key === 'W') y = 255;
-            if (event.key === 's' || event.key === 'S') y = 0;
-            if (event.key === 'a' || event.key === 'A') x = 0;
-            if (event.key === 'd' || event.key === 'D') x = 255;
-
-            // Enviamos el mensaje al servidor solo si hay cambio
-            if (x !== 127 || y !== 127) {
-                socket.emit('mensaje_tecla', { x: x, y: y });
-                
-                // Actualizamos los números en pantalla para ver que funciona
-                document.getElementById('val-x').innerText = x;
-                document.getElementById('val-y').innerText = y;
-            }
+        socket.on('connect', () => {
+            elSocketStatus.textContent = 'conectado';
+            elSocketStatus.className = 'ok';
         });
+        socket.on('disconnect', () => {
+            elSocketStatus.textContent = 'desconectado';
+            elSocketStatus.className = 'bad';
+        });
+
+        let currentX = 127;
+        let currentY = 127;
+        let lastEmittedX = null;
+        let lastEmittedY = null;
+
+        function enviarSiCambio(x, y) {
+            x = Math.max(0, Math.min(254, Math.round(x)));
+            y = Math.max(0, Math.min(254, Math.round(y)));
+
+            if (x !== lastEmittedX || y !== lastEmittedY) {
+                socket.emit('mensaje_tecla', { x: x, y: y });
+                lastEmittedX = x;
+                lastEmittedY = y;
+                elX.textContent = x;
+                elY.textContent = y;
+                elLastSent.textContent = `x=${x} y=${y} (${new Date().toLocaleTimeString()})`;
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // Teclado WASD: mantiene estado de teclas presionadas y calcula
+        // X/Y en cada frame, incluyendo el reset a 127 cuando se sueltan.
+        // ---------------------------------------------------------------
+        const teclas = { w: false, a: false, s: false, d: false };
+
+        document.addEventListener('keydown', (event) => {
+            const k = event.key.toLowerCase();
+            if (k in teclas) teclas[k] = true;
+        });
+
+        document.addEventListener('keyup', (event) => {
+            const k = event.key.toLowerCase();
+            if (k in teclas) teclas[k] = false;
+        });
+
+        function actualizarDesdeTeclado() {
+            let x = 127;
+            let y = 127;
+            if (teclas.w) y = 255;
+            if (teclas.s) y = 0;
+            if (teclas.a) x = 0;
+            if (teclas.d) x = 255;
+            currentX = x;
+            currentY = y;
+        }
+
+        // ---------------------------------------------------------------
+        // Joystick USB (Gamepad API): se detecta al conectarlo y se
+        // sondea en cada frame. El stick izquierdo (ejes 0 y 1) se mapea
+        // a X/Y en el rango 0-254.
+        // ---------------------------------------------------------------
+        let gamepadIndex = null;
+
+        window.addEventListener('gamepadconnected', (e) => {
+            gamepadIndex = e.gamepad.index;
+            elGamepadStatus.textContent = e.gamepad.id;
+            elGamepadStatus.className = 'ok';
+        });
+
+        window.addEventListener('gamepaddisconnected', () => {
+            gamepadIndex = null;
+            elGamepadStatus.textContent = 'no detectado';
+            elGamepadStatus.className = 'bad';
+        });
+
+        function leerGamepad() {
+            if (gamepadIndex === null) return false;
+            const gp = navigator.getGamepads()[gamepadIndex];
+            if (!gp) return false;
+
+            // axes[0] = stick izquierdo horizontal (-1..1)
+            // axes[1] = stick izquierdo vertical (-1..1, arriba suele ser -1)
+            const deadzone = 0.08;
+            let ax = gp.axes[0];
+            let ay = gp.axes[1];
+
+            if (Math.abs(ax) < deadzone) ax = 0;
+            if (Math.abs(ay) < deadzone) ay = 0;
+
+            // Invertimos Y para que "arriba" en el stick sea valor alto (255)
+            currentX = (ax + 1) / 2 * 254;
+            currentY = (-ay + 1) / 2 * 254;
+            return true;
+        }
+
+        // ---------------------------------------------------------------
+        // Loop principal: prioriza el gamepad si esta conectado, si no
+        // usa el teclado. Corre a ~60fps via requestAnimationFrame pero
+        // solo emite por socket cuando el valor realmente cambia.
+        // ---------------------------------------------------------------
+        function loop() {
+            const usoGamepad = leerGamepad();
+            if (!usoGamepad) {
+                actualizarDesdeTeclado();
+            }
+            enviarSiCambio(currentX, currentY);
+            requestAnimationFrame(loop);
+        }
+
+        requestAnimationFrame(loop);
     </script>
 </body>
 </html>
