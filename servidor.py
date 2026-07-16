@@ -41,7 +41,7 @@ def uart_worker():
     """Unico hilo que efectivamente escribe en el puerto serie. Evita
     condiciones de carrera entre envios."""
     ultimo_envio = 0.0
-    intervalo_minimo = 0.02  # 20 ms entre tramas, ajustable
+    intervalo_minimo = 0.01  # 10 ms entre tramas (~100 Hz max), ajustable
 
     while True:
         x, y = cmd_queue.get()
