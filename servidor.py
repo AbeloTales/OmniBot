@@ -22,7 +22,7 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO
 
 # --- Configuracion UART ---------------------------------------------------
-SERIAL_PORT = '/dev/serial0'   # en RPi4 tambien puede ser /dev/ttyAMA0
+SERIAL_PORT = '/dev/ttyS0'   # en RPi4 tambien puede ser /dev/ttyAMA0
 BAUD_RATE = 115200
 
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
