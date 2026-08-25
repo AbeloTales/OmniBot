@@ -6,8 +6,26 @@
     <title>OmniBot - Panel de Control</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        body { background-color: #121212; color: white; text-align: center; font-family: sans-serif; }
-        #video-feed { margin: 20px auto; border: 2px solid #333; }
+        body { background-color: #121212; color: white; text-align: center; font-family: sans-serif; margin: 0; padding: 0; }
+        
+        /* Contenedor principal de video - ajustado para pantallas grandes */
+        #video-feed {
+            margin: 20px auto;
+            width: 90%;          /* Ocupa el 90% del ancho de la pantalla */
+            max-width: 1920px;   /* Tope maximo de la resolucion Full HD */
+            background-color: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* La imagen de la camara se ajusta al contenedor dinamicamente */
+        #video-stream {
+            width: 100%;
+            height: auto;
+            display: block;      /* Evita espacios en blanco debajo de la imagen */
+        }
+
         .status { margin: 20px; padding: 15px; background: #1e1e1e; border-radius: 8px; display: inline-block; }
         .debug { margin: 10px; padding: 10px; background: #1a1a1a; border-radius: 6px;
                  display: inline-block; font-family: monospace; font-size: 13px; text-align: left; }
@@ -19,7 +37,8 @@
     <h1>OmniBot</h1>
 
     <div id="video-feed">
-        <img src="http://192.168.100.66:8080/stream" width="640" height="480" alt="Video">
+        <!-- El 'src' se inyectará dinamicamente con Javascript abajo -->
+        <img id="video-stream" alt="Video Feed OmniBot">
     </div>
 
     <div class="status">
@@ -36,6 +55,11 @@
     </div>
 
     <script>
+        // Inyeccion automatica de la IP para la camara
+        // Toma la misma IP a la que te conectaste desde el navegador y le suma el puerto 8080
+        const hostIP = window.location.hostname;
+        document.getElementById("video-stream").src = `http://${hostIP}:8080/stream`;
+
         const socket = io();
 
         const elX = document.getElementById('val-x');
