@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBot - Panel de Control</title>
-    <!-- Version mas reciente del cliente 4.x, mejor compatibilidad con flask-socketio -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
-
     <style>
         body { background-color: #121212; color: white; text-align: center; font-family: sans-serif; }
         #video-feed { margin: 20px auto; border: 2px solid #333; }
@@ -21,13 +19,14 @@
     <h1>OmniBot</h1>
 
     <div id="video-feed">
-        <!-- El src se cargará automáticamente con JavaScript -->
-        <img id="video-stream" width="640" height="480" alt="Video">
+        <img src="http://192.168.100.66:8080/stream" width="640" height="480" alt="Video">
     </div>
 
     <div class="status">
-        <strong>Control:</strong> Usa W, A, S, D o un joystick USB<br>
-        Vector X: <span id="val-x">127</span> | Vector Y: <span id="val-y">127</span>
+        <strong>Movimiento:</strong> WASD / Joystick Izq | <strong>Rotación:</strong> &lt; &gt; / Joystick Der<br>
+        <strong>Plataforma:</strong> P (Subir), O (Bajar) / Botones X, Círculo<br><br>
+        Vector X: <span id="val-x">127</span> | Vector Y: <span id="val-y">127</span><br>
+        Rotación R: <span id="val-r">127</span> | Plataforma P: <span id="val-p">0</span>
     </div>
 
     <div class="debug">
@@ -37,13 +36,12 @@
     </div>
 
     <script>
-        // 1. Configuración dinámica de la URL del video
-        document.getElementById('video-stream').src = `http://${window.location.hostname}:8080/stream`;
-
         const socket = io();
 
         const elX = document.getElementById('val-x');
         const elY = document.getElementById('val-y');
+        const elR = document.getElementById('val-r');
+        const elP = document.getElementById('val-p');
         const elSocketStatus = document.getElementById('socket-status');
         const elGamepadStatus = document.getElementById('gamepad-status');
         const elLastSent = document.getElementById('last-sent');
@@ -59,27 +57,45 @@
 
         let currentX = 127;
         let currentY = 127;
+        let currentR = 127;
+        let currentP = 0;
+        
         let lastEmittedX = null;
         let lastEmittedY = null;
+        let lastEmittedR = null;
+        let lastEmittedP = null;
 
-        function enviarSiCambio(x, y) {
+        function enviarSiCambio(x, y, r, p) {
             x = Math.max(0, Math.min(254, Math.round(x)));
             y = Math.max(0, Math.min(254, Math.round(y)));
+            r = Math.max(0, Math.min(254, Math.round(r)));
+            p = Math.max(0, Math.min(2, Math.round(p))); // 0=Idle, 1=Subir, 2=Bajar
 
-            if (x !== lastEmittedX || y !== lastEmittedY) {
-                socket.emit('mensaje_tecla', { x: x, y: y });
+            if (x !== lastEmittedX || y !== lastEmittedY || r !== lastEmittedR || p !== lastEmittedP) {
+                socket.emit('mensaje_tecla', { x: x, y: y, r: r, p: p });
                 lastEmittedX = x;
                 lastEmittedY = y;
+                lastEmittedR = r;
+                lastEmittedP = p;
+                
                 elX.textContent = x;
                 elY.textContent = y;
-                elLastSent.textContent = `x=${x} y=${y} (${new Date().toLocaleTimeString()})`;
+                elR.textContent = r;
+                
+                // Mostrar estado de plataforma en texto
+                let pText = "Detenida";
+                if(p === 1) pText = "Subiendo (1)";
+                if(p === 2) pText = "Bajando (2)";
+                elP.textContent = pText;
+                
+                elLastSent.textContent = `x=${x} y=${y} r=${r} p=${p} (${new Date().toLocaleTimeString()})`;
             }
         }
 
         // ---------------------------------------------------------------
-        // Teclado WASD
+        // Teclado
         // ---------------------------------------------------------------
-        const teclas = { w: false, a: false, s: false, d: false };
+        const teclas = { w: false, a: false, s: false, d: false, arrowleft: false, arrowright: false, p: false, o: false };
 
         document.addEventListener('keydown', (event) => {
             const k = event.key.toLowerCase();
@@ -92,18 +108,30 @@
         });
 
         function actualizarDesdeTeclado() {
-            let x = 127;
-            let y = 127;
+            let x = 127; let y = 127; let r = 127; let p = 0;
+            
+            // Movimiento
             if (teclas.w) y = 255;
             if (teclas.s) y = 0;
             if (teclas.a) x = 0;
             if (teclas.d) x = 255;
+            
+            // Rotación
+            if (teclas.arrowleft) r = 0;
+            if (teclas.arrowright) r = 255;
+            
+            // Plataforma
+            if (teclas.p) p = 1;       // Subir
+            else if (teclas.o) p = 2;  // Bajar
+
             currentX = x;
             currentY = y;
+            currentR = r;
+            currentP = p;
         }
 
         // ---------------------------------------------------------------
-        // Joystick USB (Gamepad API)
+        // Gamepad API
         // ---------------------------------------------------------------
         let gamepadIndex = null;
 
@@ -125,14 +153,27 @@
             if (!gp) return false;
 
             const deadzone = 0.08;
-            let ax = gp.axes[0];
-            let ay = gp.axes[1];
+            let ax = gp.axes[0]; // Joy Izq X
+            let ay = gp.axes[1]; // Joy Izq Y
+            let ar = gp.axes[2]; // Joy Der X (Rotación)
 
             if (Math.abs(ax) < deadzone) ax = 0;
             if (Math.abs(ay) < deadzone) ay = 0;
+            if (Math.abs(ar) < deadzone) ar = 0;
 
             currentX = (ax + 1) / 2 * 254;
             currentY = (-ay + 1) / 2 * 254;
+            currentR = (ar + 1) / 2 * 254;
+
+            // Botones de Plataforma (Estandar HTML5: 0=Abajo/X, 1=Derecha/Círculo)
+            let p = 0;
+            if (gp.buttons[0] && gp.buttons[0].pressed) {
+                p = 1; // Subir (Botón X de Play)
+            } else if (gp.buttons[1] && gp.buttons[1].pressed) {
+                p = 2; // Bajar (Botón Círculo de Play)
+            }
+            currentP = p;
+
             return true;
         }
 
@@ -144,7 +185,7 @@
             if (!usoGamepad) {
                 actualizarDesdeTeclado();
             }
-            enviarSiCambio(currentX, currentY);
+            enviarSiCambio(currentX, currentY, currentR, currentP);
             requestAnimationFrame(loop);
         }
 
