@@ -28,14 +28,14 @@ def iniciar_camara():
     global camera_process
     comando_camara = [
         "ustreamer", "--device=/dev/video0", "--host=0.0.0.0", 
-        "--port=8080", "--resolution=640x480"
+        "--port=8080", "--resolution=1920x1080"
     ]
     try:
         camera_process = subprocess.Popen(
             comando_camara, stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL, preexec_fn=os.setsid
         )
-        print("[CAMARA] Servidor ustreamer iniciado en puerto 8080.")
+        print("[CAMARA] Servidor ustreamer iniciado en puerto 8080 a 1920x1080.")
     except Exception as e:
         print(f"[CAMARA] Error al iniciar la camara: {e}")
 
