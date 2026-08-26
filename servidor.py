@@ -1,5 +1,6 @@
 # =========================================================================
 # OmniBot - Master UART + Auto Video Streamer + Plataforma/Rotacion
+# Version de Envio Continuo (Evita el Timeout del ESP32)
 # =========================================================================
 
 import serial
@@ -35,7 +36,7 @@ def iniciar_camara():
             comando_camara, stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL, preexec_fn=os.setsid
         )
-        print("[CAMARA] Servidor ustreamer iniciado en puerto 8080 a 1920x1080.")
+        print("[CAMARA] Servidor ustreamer iniciado en puerto 8080 a 1280x720.")
     except Exception as e:
         print(f"[CAMARA] Error al iniciar la camara: {e}")
 
@@ -48,25 +49,29 @@ def detener_camara():
         except Exception as e:
             print(f"[CAMARA] Error: {e}")
 
-# Nuevo calculo de checksum considerando 5 bytes de datos
 def calc_checksum(a: int, b: int, c: int, d: int, e: int) -> int:
     return (a ^ b ^ c ^ d ^ e) & 0xFF
 
 def uart_worker():
-    ultimo_envio = 0.0
-    intervalo_minimo = 0.01  # 100 Hz max
+    # Valores por defecto (Robot detenido)
+    current_x = 127
+    current_y = 127
+    current_r = 127
+    current_p = 0
 
     while True:
-        x, y, r, p = cmd_queue.get()
+        try:
+            # Espera un nuevo comando máximo 0.05 segundos (50ms). 
+            # Si no llega, lanza excepcion Empty y usa el comando anterior.
+            x, y, r, p = cmd_queue.get(timeout=0.05)
+            current_x, current_y, current_r, current_p = x, y, r, p
+        except queue.Empty:
+            pass # No hay datos nuevos, mantenemos el ultimo estado
 
-        espera = intervalo_minimo - (time.time() - ultimo_envio)
-        if espera > 0:
-            time.sleep(espera)
-
-        val_x = max(0, min(254, int(x)))
-        val_y = max(0, min(254, int(y)))
-        val_r = max(0, min(254, int(r)))
-        val_p = max(0, min(2, int(p))) # 0=Stop, 1=Subir, 2=Bajar
+        val_x = max(0, min(254, int(current_x)))
+        val_y = max(0, min(254, int(current_y)))
+        val_r = max(0, min(254, int(current_r)))
+        val_p = max(0, min(2, int(current_p))) 
 
         chk = calc_checksum(0xFF, val_x, val_y, val_r, val_p)
         
@@ -75,13 +80,11 @@ def uart_worker():
 
         try:
             ser.write(packet)
-            # Solo imprime si alguien presiona la plataforma o se mueve, para evitar spam
-            if val_p != 0 or val_x != 127 or val_y != 127 or val_r != 127:
-                print(f"[UART] X={val_x} Y={val_y} R={val_r} PLAT={val_p}")
+            # Solo imprime en pantalla de vez en cuando (cada ~0.5s) para no saturar tu terminal
+            if (val_x != 127 or val_y != 127 or val_r != 127) and (int(time.time() * 10) % 5 == 0):
+                print(f"[UART] Enviando continuo X={val_x} Y={val_y} R={val_r} PLAT={val_p}")
         except Exception as e:
-            print(f"[UART] Error: {e}")
-
-        ultimo_envio = time.time()
+            pass
 
 threading.Thread(target=uart_worker, daemon=True).start()
 
