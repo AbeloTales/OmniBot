@@ -107,7 +107,7 @@ def handle_tecla(data):
 if __name__ == '__main__':
     iniciar_camara()
     try:
-        socketio.run(app, host='0.0.0.0', port=5000)
+        socketio.run(app, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)
     finally:
         ser.close()
         detener_camara()
