@@ -15,7 +15,7 @@ from flask_socketio import SocketIO
 
 # --- Configuracion UART ---
 SERIAL_PORT = '/dev/serial0'
-BAUD_RATE = 115200
+BAUD_RATE = 9600
 
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
 
