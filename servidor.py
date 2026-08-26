@@ -28,7 +28,7 @@ def iniciar_camara():
     global camera_process
     comando_camara = [
         "ustreamer", "--device=/dev/video0", "--host=0.0.0.0", 
-        "--port=8080", "--resolution=1920x1080"
+        "--port=8080", "--resolution=1280x720"
     ]
     try:
         camera_process = subprocess.Popen(
