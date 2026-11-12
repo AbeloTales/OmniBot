@@ -1,6 +1,12 @@
 # OmniBot
 
-OmniBot es una plataforma robótica móvil omnidireccional equipada con 4 ruedas Mecanum y operada de forma remota. Con el fin de ser utilizada en pruebas de laboratorio para la programación de entornos de Warehouse y experimentar con el comportamiento de diversas clases de estos robots en un circuito cerrado, una habitación pequeña, para así estudiar el comportamiento de estos robots y la optimización de esta clase de espacios. 
+OmniBot es una plataforma robótica móvil omnidireccional equipada con 4 ruedas Mecanum y operada de forma remota, con el fin de ser utilizada en pruebas de laboratorio para la programación de entornos de Warehouse y experimentar con el comportamiento de diversas clases de estos robots en un circuito cerrado, una habitación pequeña, para así estudiar el comportamiento de estos robots y la optimización de esta clase de espacios. 
+
+<p align="center">
+  <img src="./Conceptual_Sketch.png" alt="Diseño Conceptual Inicial">
+</p>
+
+
 El sistema utiliza una arquitectura distribuida que integra una Raspberry Pi para el servidor de teleoperación web y el streaming de video, junto con un ESP32 que se encarga completamente del control de hardware de bajo nivel.
 
 <p align="center">
