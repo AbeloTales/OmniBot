@@ -55,3 +55,7 @@ Para el entorno del servidor en la Raspberry Pi, el proyecto requiere las siguie
    ```bash
    cd ~/OmniBot/Control_Script
    python3 servidor.py
+
+## 💻 Declaración de Uso - Inteligencia Artificial.
+   La inteligencia artificial en este proyecto fue utilizada como herramienta para realizar la programación del servidor alojado en el RaspberryPi y el script que se encarga de controlar y procesar las señales de respuesta del servidor en el ESP32. 
+   El componente electrónico, mecánico y eléctrico de diseño del proyecto fueron trabajados sin ayuda de inteligencia artificial.
