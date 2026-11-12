@@ -37,3 +37,12 @@ Para el entorno del servidor en la Raspberry Pi, el proyecto requiere las siguie
    ```bash
    git clone [https://github.com/AbeloTales/OmniBot.git](https://github.com/AbeloTales/OmniBot.git)
    cd OmniBot
+
+2. **Instalar las dependencias en el Raspberry Pi:**
+   ```bash
+   pip install flask flask-socketio simple-websocket pyserial
+
+2. **Ejecutar el archivo principal del servidor:**
+   ```bash
+   cd ~/OmniBot/Control_Script
+   python3 servidor.py
