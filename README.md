@@ -13,10 +13,10 @@ OmniBot es una plataforma robótica móvil omnidireccional equipada con 4 ruedas
 
 ## 📂 Estructura del Repositorio
 
-*   📁 **`Control_Script/`**: Scripts principales en Python para el servidor Flask, gestión de WebSockets y la lógica de envío serial.
-*   📁 **`Electronic_Design/`**: Esquemáticos y diseños de placas de circuito impreso (PCB) para la integración de los drivers DRV8825 y el microcontrolador.
-*   📁 **`Mechanic_Design/`**: Modelado CAD 3D de la estructura mecánica, incluyendo bocetos preliminares y piezas para impresión 3D (Ender 3 V2).
-*   📁 **`System_Scripts/`**: Scripts del sistema (bash/python) utilizados para levantar procesos auxiliares, como el stream de la cámara con ustreamer.
+*   📁 **`Control_Script`**: Scripts principales en Python para el servidor Flask, gestión de WebSockets y la lógica de envío serial.
+*   📁 **`Electronic_Design`**: Esquemáticos y diseños de placas de circuito impreso (PCB) para la integración de los drivers DRV8825 y el microcontrolador, junto con implementaciones extra de circuitos para control del motor de la plataforma del modelo.
+*   📁 **`Mechanic_Design`**: Modelado CAD 3D de la estructura mecánica, incluyendo bocetos preliminares y piezas para impresión 3D.
+*   📁 **`System_Scripts`**: Scripts del sistema utilizados para levantar procesos auxiliares, como el stream de la cámara con ustreamer y el funcionamiento de los calls del servidor.
 
 
 ## 🛠️ Tecnologías y Dependencias
