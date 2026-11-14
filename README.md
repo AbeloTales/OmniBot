@@ -31,6 +31,7 @@ El sistema utiliza una arquitectura distribuida que integra una Raspberry Pi par
 *   📁 **`Mechanic_Design`**: Modelado CAD 3D de la estructura mecánica, incluyendo bocetos preliminares y piezas para impresión 3D.
 *   📁 **`System_Scripts`**: Scripts del sistema utilizados para levantar procesos auxiliares, como el stream de la cámara con ustreamer y el funcionamiento de los calls del servidor.
 
+
 <p align="center">
   <img src="./Software_Distribution.png" alt="Arquitectura del Sistema">
 </p>
