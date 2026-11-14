@@ -13,20 +13,16 @@ El sistema utiliza una arquitectura distribuida que integra una Raspberry Pi par
   <img src="./System_Arquitecture.png" alt="Arquitectura del Sistema">
 </p>
 
-<p align="center">
-  <img src="./Software_Distribution.png" alt="Arquitectura del Sistema">
-</p>
-
-<p align="center">
-  <img src="./Preliminar_Model.png" alt="Arquitectura del Sistema">
-</p>
-
 ## 🚀 Características Principales
 
 *   **Movimiento Omnidireccional:** Plataforma impulsada por motores paso a paso y ruedas Mecanum (con rodillos de 14 mm, realizados en con moldes de compresión de silicón impresos en 3D).
 *   **Teleoperación Web en Tiempo Real:** Interfaz de control desarrollada con Flask y SocketIO. Los eventos web se capturan con JavaScript y se procesan en el servidor.
 *   **Visión Artificial / Streaming:** Captura de video en alta resolución utilizando `ustreamer`, lanzado y gestionado como un subproceso (`subprocess`) desde Python.
 *   **Comunicación Segura UART:** Enlace serial entre la Raspberry Pi y el ESP32 utilizando tramas de datos estructuradas con Checksum para garantizar la integridad de las señales de los motores.
+
+<p align="center">
+  <img src="./Preliminar_Model.png" alt="Arquitectura del Sistema">
+</p>
 
 ## 📂 Estructura del Repositorio
 
@@ -35,6 +31,9 @@ El sistema utiliza una arquitectura distribuida que integra una Raspberry Pi par
 *   📁 **`Mechanic_Design`**: Modelado CAD 3D de la estructura mecánica, incluyendo bocetos preliminares y piezas para impresión 3D.
 *   📁 **`System_Scripts`**: Scripts del sistema utilizados para levantar procesos auxiliares, como el stream de la cámara con ustreamer y el funcionamiento de los calls del servidor.
 
+<p align="center">
+  <img src="./Software_Distribution.png" alt="Arquitectura del Sistema">
+</p>
 
 ## 🛠️ Tecnologías y Dependencias
 
@@ -66,6 +65,8 @@ Para el entorno del servidor en la Raspberry Pi, el proyecto requiere las siguie
 
 ## 💻 Declaración de Uso - Inteligencia Artificial.
    La inteligencia artificial en este proyecto fue utilizada como herramienta para realizar la programación del servidor alojado en el RaspberryPi y el script que se encarga de controlar y procesar las señales de respuesta del servidor en el ESP32.
+
+   Además, se usó inteligencia artificial para colorear los bocetos hechos a mano para un mejor entendimiento del proceso de diseño.
 
    El componente electrónico, mecánico y eléctrico de diseño del proyecto fueron trabajados sin ayuda de inteligencia artificial.
 
