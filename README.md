@@ -22,7 +22,7 @@ Por un lado, la Raspberry Pi recibe los comandos de navegación en tiempo real d
 *   **Comunicación Segura UART:** Enlace serial entre la Raspberry Pi y el ESP32 utilizando tramas de datos estructuradas con Checksum para garantizar la integridad de las señales de los motores.
 
 <p align="center">
-  <img src="./Preliminar_Model.png" alt="Arquitectura del Sistema">
+  <img src="./Preliminar_Model.png" alt="Modelo preliminar">
 </p>
 
 ## 📂 Estructura del Repositorio
@@ -34,7 +34,7 @@ Por un lado, la Raspberry Pi recibe los comandos de navegación en tiempo real d
 
 
 <p align="center">
-  <img src="./Software_Distribution.png" alt="Arquitectura del Sistema">
+  <img src="./Software_Distribution.png" alt="Distribucion de Software">
 </p>
 
 ## 🛠️ Tecnologías y Dependencias
