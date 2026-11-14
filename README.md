@@ -1,17 +1,18 @@
-# OmniBot
+# OmniBot - Lab. Warehouse experimental Bot
 
-OmniBot es una plataforma robótica móvil omnidireccional equipada con 4 ruedas Mecanum y operada de forma remota, con el fin de ser utilizada en pruebas de laboratorio para la programación de entornos de Warehouse y experimentar con el comportamiento de diversas clases de estos robots en un circuito cerrado, una habitación pequeña, para así estudiar el comportamiento de estos robots y la optimización de esta clase de espacios. 
+OmniBot es una plataforma robótica móvil omnidireccional equipada con 4 ruedas Mecanum y operada de forma remota. Está diseñada para realizar pruebas de laboratorio orientadas a la programación de entornos tipo almacén (*Warehouse*), permitiendo experimentar en circuitos cerrados para analizar la cinemática de estos robots y optimizar la gestión de espacios reducidos.
 
 <p align="center">
   <img src="./Conceptual_Sketch.png" alt="Diseño Conceptual Inicial">
 </p>
 
-
-El sistema utiliza una arquitectura distribuida que integra una Raspberry Pi para el servidor de teleoperación web y el streaming de video, junto con un ESP32 que se encarga completamente del control de hardware de bajo nivel.
+El sistema implementa una arquitectura distribuida que integra una Raspberry Pi para alojar el servidor de teleoperación web y gestionar el streaming de video, junto con un microcontrolador ESP32 encargado exclusivamente del control de hardware de bajo nivel.
 
 <p align="center">
   <img src="./System_Arquitecture.png" alt="Arquitectura del Sistema">
 </p>
+
+Por un lado, la Raspberry Pi recibe los comandos de navegación en tiempo real desde cualquier computadora, admitiendo tanto controles mediante teclado como a través de un mando (*gamepad*). Por otro lado, el ESP32 recibe estas instrucciones mediante comunicación serial UART y las procesa a través de una matriz cinemática para calcular y asignar la dirección y velocidad de rotación de cada rueda.
 
 ## 🚀 Características Principales
 
@@ -54,7 +55,6 @@ Para el entorno del servidor en la Raspberry Pi, el proyecto requiere las siguie
    ```bash
    git clone [https://github.com/AbeloTales/OmniBot.git](https://github.com/AbeloTales/OmniBot.git)
 
-
 2. **Instalar las dependencias en el Raspberry Pi:**
    ```bash
    pip install flask flask-socketio simple-websocket pyserial
@@ -65,9 +65,7 @@ Para el entorno del servidor en la Raspberry Pi, el proyecto requiere las siguie
    python3 servidor.py
 
 ## 💻 Declaración de Uso - Inteligencia Artificial.
-   La inteligencia artificial en este proyecto fue utilizada como herramienta para realizar la programación del servidor alojado en el RaspberryPi y el script que se encarga de controlar y procesar las señales de respuesta del servidor en el ESP32.
-
-   Además, se usó inteligencia artificial para colorear los bocetos hechos a mano para un mejor entendimiento del proceso de diseño.
+   La inteligencia artificial en este proyecto fue utilizada como herramienta para realizar la programación del servidor alojado en el RaspberryPi y el script que se encarga de controlar y procesar las señales de respuesta del servidor en el ESP32. Además, se usó inteligencia artificial para colorear los bocetos hechos a mano para un mejor entendimiento del proceso de diseño.
 
    El componente electrónico, mecánico y eléctrico de diseño del proyecto fueron trabajados sin ayuda de inteligencia artificial.
 
