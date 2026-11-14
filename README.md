@@ -13,6 +13,14 @@ El sistema utiliza una arquitectura distribuida que integra una Raspberry Pi par
   <img src="./System_Arquitecture.png" alt="Arquitectura del Sistema">
 </p>
 
+<p align="center">
+  <img src="./Software_Distribution.png" alt="Arquitectura del Sistema">
+</p>
+
+<p align="center">
+  <img src="./Preliminar_Model.png" alt="Arquitectura del Sistema">
+</p>
+
 ## 🚀 Características Principales
 
 *   **Movimiento Omnidireccional:** Plataforma impulsada por motores paso a paso y ruedas Mecanum (con rodillos de 14 mm, realizados en con moldes de compresión de silicón impresos en 3D).
@@ -57,5 +65,7 @@ Para el entorno del servidor en la Raspberry Pi, el proyecto requiere las siguie
    python3 servidor.py
 
 ## 💻 Declaración de Uso - Inteligencia Artificial.
-   La inteligencia artificial en este proyecto fue utilizada como herramienta para realizar la programación del servidor alojado en el RaspberryPi y el script que se encarga de controlar y procesar las señales de respuesta del servidor en el ESP32. 
+   La inteligencia artificial en este proyecto fue utilizada como herramienta para realizar la programación del servidor alojado en el RaspberryPi y el script que se encarga de controlar y procesar las señales de respuesta del servidor en el ESP32.
+
    El componente electrónico, mecánico y eléctrico de diseño del proyecto fueron trabajados sin ayuda de inteligencia artificial.
+
