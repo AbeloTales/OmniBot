@@ -45,7 +45,7 @@ Para el entorno del servidor en la Raspberry Pi, el proyecto requiere las siguie
 1. **Clonar el repositorio:**
    ```bash
    git clone [https://github.com/AbeloTales/OmniBot.git](https://github.com/AbeloTales/OmniBot.git)
-   cd OmniBot
+
 
 2. **Instalar las dependencias en el Raspberry Pi:**
    ```bash
